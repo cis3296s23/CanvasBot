@@ -25,7 +25,30 @@ async def on_message(message):
         await message.channel.send("Welcome to the Canvas Helper bot.  Here are the commands you can use: \n help - prints this message \n Announcements - prints the announcements for the course \n Grade - prints your current grade for a course \n Poll - creates a poll for a course")
         return
 
-
+@bot.command()
+async def courses(ctx):
+    TOKEN2=config.tokens['canvas']
+    BASEURL='https://templeu.instructure.com/'
+    canvas_api = canvasapi.Canvas(BASEURL, TOKEN2)
+    user = canvas_api.get_user('self')
+    courses=user.get_courses()
+    #iterates through courses
+    for course in courses:
+        try:
+            #split to get the year of the course
+            date=course.created_at.split('-')[0]
+            #print(date)
+            courselist=[]
+            #
+            if(int(date)==2023):
+                
+                await ctx.send(course)
+                
+                courselist.add(course)
+            
+        except AttributeError:
+            print("error")
+    
 @bot.command()
 async def upcoming(ctx):
     TOKEN2 = config.tokens['canvas']
