@@ -6,8 +6,8 @@ import canvasapi
 import datetime 
 import pytz
 
-DISCORD = 'MTA3NTA3MDQ4NTQzNzYyODQ5Ng.GUNLqu.FAph9PM6AXXUsRPLynBJn-MMJn5k7X2DUWWn2k'
-CANVAS = '9957~z5ERya9W6uFKzAfoB31fgHj0wMlyGkywwngUjbpc4HsVaeNHDXsThPVUljTc8q9U'
+DISCORD = ''
+CANVAS = ''
 BASEURL = 'https://templeu.instructure.com/'
 canvas_api = canvasapi.Canvas(BASEURL, CANVAS)
 
