@@ -40,7 +40,7 @@ async def course(ctx):
             pick = int(m.content)
             return range(0,select).count(pick) > 0
 
-    msg = await bot.wait_for('message', check=check, timeout = 15)
+    msg = await bot.wait_for('message', check=check, timeout = 30) #changed timeout to 30 seconds
     print(courses[pick].id)
     global current_class 
     current_class = canvas_api.get_course(courses[pick].id)
@@ -57,39 +57,62 @@ async def announcements(ctx):
 
     select = 0
     for course in courses:
-        name = course.name
-        id = course.id
-        await ctx.send(f"({select}) {name}\n")
-        select += 1
+        try:
+            date=course.created_at.split('-')[0]
+            if(int(date)==2023):
+                courselist.append(course)
+                name = course.name
+                id = course.id
+                await ctx.send(f"({select}) {name}\n")
+                select += 1
+        except AttributeError:
+            print('Error: AttributeError occurred.')
+    
+    #
+    
+    while(1): 
+        await ctx.send(f"Enter a number to select the corresponding course, enter number 9 or wait 15 seconds to quit\n") 
 
-    await ctx.send(f"Enter a number to select the corresponding course\n") 
+        def check(m):
+            if m.content.isdigit():
+                global pick 
+                pick = int(m.content)
+                print(pick, "pick")
+                return pick
 
-    def check(m):
-        if m.content.isdigit():
-            global pick 
-            pick = int(m.content)
-            return range(0,select).count(pick) > 0
-
-    msg = await bot.wait_for('message', check=check, timeout = 15)
-    print(courses[pick].id)
-    global current_class 
-    current_class = canvas_api.get_course(courses[pick].id)
-    await ctx.send("Here are your announcements for this course\n")
-    test  = canvas_api.get_announcements(context_codes=[courses[pick].id])
-    if(test is None):
-        await ctx.send("No announcements for this course")
-        return
-    for a in test:
-        html=a.message
-        soup = BeautifulSoup(html, features="html.parser")
-        for script in soup(["script", "style"]):
-            script.extract()    # rip it out
-        text = soup.get_text()
-        print(text)
-        posted_at = datetime.datetime.strptime(a.posted_at, '%Y-%m-%dT%H:%M:%SZ')
-        formatted_date = posted_at.strftime('%B %d, %Y at %I:%M %p')
-        await ctx.send(formatted_date)
-        await ctx.send(text)
+        msg = await bot.wait_for('message', check=check, timeout = 15)
+        #print(courselist[pick].name)
+        #print(pick, "pick in while loop")
+        #print(len(courselist), "len of courselist")
+        print(int(pick))
+        if(int(pick)==9):
+            await ctx.send('quitting')
+            return 
+        if(pick>=len(courselist)):
+            await ctx.send('invalid input')
+            continue
+        
+        announce=courselist[pick]
+        announce=[int(announce.id)]
+        test  = canvas_api.get_announcements(context_codes=announce)
+        print(len(list(test)))
+        if(len(list(test))==0):
+            print("No announcements")
+            continue
+        for a in test:
+            html=a.message
+            
+            soup = BeautifulSoup(html, features="html.parser")
+            for script in soup(["script", "style"]):
+                script.extract()    # rip it out
+            text = soup.get_text()
+            if(a.posted_at is not None):
+                posted_at = datetime.datetime.strptime(a.posted_at, '%Y-%m-%dT%H:%M:%SZ')
+                formatted_date = posted_at.strftime('%B %d, %Y at %I:%M %p')
+                await ctx.send(formatted_date)
+            await ctx.send(a.title)
+            await ctx.send(text)
+        
 
 
 @bot.command()
