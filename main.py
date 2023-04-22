@@ -90,11 +90,11 @@ async def announcements(ctx):
             for script in soup(["script", "style"]):
                 script.extract()    # rip it out
             text = soup.get_text()
+            await ctx.send(a.title)
             if(a.posted_at is not None):
                 posted_at = datetime.datetime.strptime(a.posted_at, '%Y-%m-%dT%H:%M:%SZ')
                 formatted_date = posted_at.strftime('%B %d, %Y at %I:%M %p')
                 await ctx.send(formatted_date)
-            await ctx.send(a.title)
-            await ctx.send(text)
+            await ctx.send(f"```{text}```")
 
 bot.run(DISCORD)
