@@ -113,7 +113,44 @@ async def announcements(ctx):
             await ctx.send(a.title)
             await ctx.send(text)
         
-
+@bot.command()
+async def weekly(ctx):
+    user = canvas_api.get_user('self')
+    courses=user.get_courses(enrollment_state= 'active')
+    courselist=[]
+    assignmentslist=[]
+    for course in courses:
+        try:
+            date=course.created_at.split('-')[0]
+            if(int(date)==2023):
+                print(course.name)
+                courselist.append(course)
+                
+        except AttributeError:
+            print('Error: AttributeError occurred.')
+            
+    for course in courselist:
+        assignments = course.get_assignments(submission_state='unsubmitted')
+        assignmentslist.append(assignments)
+    out=""
+    for courseAssignments in assignmentslist:
+        for assignment in courseAssignments:
+            due_date=str(assignment.due_at)
+            #print(assignment.name)
+            if(due_date!='None'):
+                due_date = datetime.datetime.strptime(due_date, '%Y-%m-%dT%H:%M:%SZ')
+                time_diff = due_date - datetime.datetime.utcnow()
+                #print(assignment.name)
+                if 0<=time_diff.days <= 7:
+                    if(time_diff.days==0):
+                        out+=assignment.name + " is due today.\n"
+                        
+                    elif(time_diff.days==1):
+                        out+=assignment.name + " is due tomorrow.\n"
+                    else:
+                        out+=assignment.name + " is due in " + str(time_diff.days) + " days.\n"
+                    
+    await ctx.send(out)
 
 @bot.command()
 async def upcoming(ctx):
