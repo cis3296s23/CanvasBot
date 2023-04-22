@@ -1,12 +1,16 @@
 import discord
-import keys
+from dotenv import load_dotenv 
+import os
 from discord.ext import commands
 import canvasapi
 import datetime 
 import pytz
+from pytz import timezone
 
-DISCORD = keys.tokens["discord"]
-CANVAS = keys.tokens['canvas']
+load_dotenv()
+
+DISCORD = os.getenv("DISCORD")
+CANVAS = os.getenv("CANVAS")
 BASEURL = 'https://templeu.instructure.com/'
 canvas_api = canvasapi.Canvas(BASEURL, CANVAS)
 
@@ -59,16 +63,19 @@ async def upcoming(ctx):
         due_date = str(assignment.due_at)
 
         if(due_date != "None"):
-            t1 = datetime.datetime(int(due_date[0:4]), int(due_date[5:7]), int(due_date[8:10]))
-            t2 = datetime.datetime.now()
+            print(due_date)
+            t1 = datetime.datetime(int(due_date[0:4]), int(due_date[5:7]), int(due_date[8:10]), int(due_date[11:13]), int(due_date[14:16]), tzinfo=pytz.utc)
+            t2 = datetime.datetime.now(pytz.utc)
             if(t1>t2):
                 none_upcoming = False
-                readable_time = f"{due_date[11:16]} UTC"
+                readable_time = t1.astimezone(timezone('US/Eastern')).strftime("%H:%M")
                 readable_date = t1.strftime("%A, %B %d")
                 print(f"{assignment} is due on {readable_date} at {readable_time}\n")
                 await ctx.send(f"```diff\n- {assignment.name} -\ndue on {readable_date} at {readable_time}```\n\n")
     
     if(none_upcoming):
         await ctx.send(f"You have no upcoming assignments in {current_class.name}!")
+
+
 
 bot.run(DISCORD)
