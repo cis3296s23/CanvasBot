@@ -6,6 +6,7 @@ import canvasapi
 import datetime 
 import pytz
 from pytz import timezone
+from bs4 import BeautifulSoup
 
 load_dotenv()
 
@@ -76,6 +77,24 @@ async def upcoming(ctx):
     if(none_upcoming):
         await ctx.send(f"You have no upcoming assignments in {current_class.name}!")
 
-
+@bot.command()
+async def announcements(ctx):  
+        test  = canvas_api.get_announcements(context_codes=[current_class])
+        print(len(list(test)))
+        if(len(list(test))==0):
+            print("No announcements")
+        for a in test:
+            html=a.message
+            
+            soup = BeautifulSoup(html, features="html.parser")
+            for script in soup(["script", "style"]):
+                script.extract()    # rip it out
+            text = soup.get_text()
+            if(a.posted_at is not None):
+                posted_at = datetime.datetime.strptime(a.posted_at, '%Y-%m-%dT%H:%M:%SZ')
+                formatted_date = posted_at.strftime('%B %d, %Y at %I:%M %p')
+                await ctx.send(formatted_date)
+            await ctx.send(a.title)
+            await ctx.send(text)
 
 bot.run(DISCORD)
