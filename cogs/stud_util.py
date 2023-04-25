@@ -94,13 +94,14 @@ class stud_util(commands.Cog):
         current_class = canvas_api.get_course(courses[pick].id)
         await interaction.followup.send(f'Current course: **{courses[pick].name}**\n')
 
-    @nextcord.slash_command(name='announcements', description='View announcements from current class')
+    @nextcord.slash_command(name='announcements', description='View announcement from current class')
     async def display_announcements(self, interaction : Interaction):
         await interaction.response.defer()
         test  = canvas_api.get_announcements(context_codes=[current_class])
         print(len(list(test)))
         if(len(list(test))==0):
             print("No announcements")
+        output = ''
         for a in test:
             html=a.message
             
@@ -108,12 +109,15 @@ class stud_util(commands.Cog):
             for script in soup(["script", "style"]):
                 script.extract()    # rip it out
             text = soup.get_text()
-            await interaction.followup.send(a.title)
+            output += f'{a.title}\n'
             if(a.posted_at is not None):
                 posted_at = datetime.datetime.strptime(a.posted_at, '%Y-%m-%dT%H:%M:%SZ')
                 formatted_date = posted_at.strftime('%B %d, %Y at %I:%M %p')
-                await interaction.followup.send(formatted_date)
-            await interaction.followup.send(f"```{text}```")
+                output += f'{formatted_date}\n'
+            output += f"```{text}```"
+            break
+
+        await interaction.followup.send(output)
 
 def setup(client):
     client.add_cog(stud_util(client))
