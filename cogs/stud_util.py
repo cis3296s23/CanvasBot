@@ -5,6 +5,7 @@ from nextcord.ext import commands
 from nextcord import Interaction
 from nextcord.ext.commands import has_permissions, MissingPermissions
 import canvasapi
+import json
 import datetime 
 import pytz
 from pytz import timezone
@@ -16,7 +17,6 @@ CANVAS = os.getenv("CANVAS")
 BASEURL = 'https://templeu.instructure.com/'
 canvas_api = canvasapi.Canvas(BASEURL, CANVAS)
 
-current_class = canvas_api.get_courses(enrollment_state='active')[3]
 
 class stud_util(commands.Cog):
     def __init__(self, client):
@@ -25,6 +25,16 @@ class stud_util(commands.Cog):
     # Our test server id. Change in the future.
     server_id = 1075559489631170590
 
+    def get_user_canvas(self, member : nextcord.User | nextcord.Member,
+                        filename = 'users.json') -> str:
+        with open(filename, 'r+') as file:
+            file_data = json.load(file)
+            for user in file_data['users']:
+                print(user['snowflake'])
+                if user['snowflake'] == member.id:
+                    return user['apikey']
+            return "Please login using the /login command!"
+            
     @nextcord.slash_command(name='upcoming', description='List the upcoming assignments.')
     async def get_upcoming(self, interaction : Interaction):
         await interaction.response.defer()
@@ -90,23 +100,20 @@ class stud_util(commands.Cog):
                         
         await interaction.followup.send(out)
 
-    @nextcord.slash_command(name='grades', description='View grade for a specific class.')
-    async def view_grade(self, interaction : Interaction):
-        pass
-
-    @nextcord.slash_command(name='due', description='Get due date for a specific assignment.')
-    async def get_due_date(self, interaction : Interaction, assignment : str):
-        pass
-
     @nextcord.slash_command(name='courses', description='List enrolled courses.')
     async def get_courses(self, interaction : Interaction):
-        #await interaction.response.send_message("Here are your courses:\n")
-        await interaction.response.defer()
         
-        user = canvas_api.get_user('self')
-        print(user.name)
+        API_URL = 'https://templeu.instructure.com/'
+        api_key = self.get_user_canvas(member=interaction.user)
 
-        courses = canvas_api.get_courses(enrollment_state='active')
+        if api_key == 'Please login using the /login command!':
+            await interaction.response.send_message(api_key)
+            return
+        
+        user = canvasapi.Canvas(API_URL, api_key)
+        courses = user.get_courses(enrollment_state='active')
+
+        await interaction.response.send_message("Here are your courses:\n")
 
         select = 0
         output = ""
@@ -129,7 +136,7 @@ class stud_util(commands.Cog):
         print(courses[pick].id)
         global current_class 
 
-        current_class = canvasapi.get_course(courses[pick].id)
+        current_class = user.get_course(courses[pick].id)
         await interaction.followup.send(f'Current course: **{courses[pick].name}**\n')
 
     @nextcord.slash_command(name='announcements', description='View announcements from current class')
