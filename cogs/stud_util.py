@@ -168,20 +168,20 @@ class stud_util(commands.Cog):
         if len(list(test)) == 0:
             print("No announcements")
             return
-        for a in test:
-            html=a.message
-            soup = BeautifulSoup(html, features="html.parser")
-            for script in soup(["script", "style"]):
-                script.extract()    # rip it out
-            text = soup.get_text()
-            str=a.title
-            if(a.posted_at is not None):
-                posted_at = datetime.datetime.strptime(a.posted_at, '%Y-%m-%dT%H:%M:%SZ')
-                formatted_date = posted_at.strftime('%B %d, %Y at %I:%M %p')
-                str+='\n'+formatted_date
-                
-            await interaction.followup.send(str+'\n'+text)
-            break
+        
+        html=a.message
+        soup = BeautifulSoup(html, features="html.parser")
+        for script in soup(["script", "style"]):
+            script.extract()    # rip it out
+        text = soup.get_text()
+        output=a.title
+        if(a.posted_at is not None):
+            posted_at = datetime.datetime.strptime(a.posted_at, '%Y-%m-%dT%H:%M:%SZ')
+            formatted_date = posted_at.strftime('%B %d, %Y at %I:%M %p')
+            output+='\n'+formatted_date
+
+        await interaction.followup.send(output+'\n'+text)
+        
 
 def setup(client):
     client.add_cog(stud_util(client))
